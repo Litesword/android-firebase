@@ -18,58 +18,128 @@ const firebaseConfig = {
 };
 
 
+
 const LoginPage = () => {
   const [mobileNumber, setMobileNumber] = useState("");
   const [otp, setOtp] = useState("");
+  const [showOtpBox, setShowOtpBox] = useState(false);
   const [verificationId, setVerificationId] = useState(null);
   const [auth, setAuth] = useState(null);
 
-  const handleLogin = async () => {
-    const app = initializeApp(firebaseConfig);
-    const authInstance = getAuth(app);
+  useEffect(() => {
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const authInstance = getAuth();
+  authInstance.languageCode = 'it';
+  // console.log("Auth initialized:", authInstance);
+  setAuth(authInstance);
+}, []);// Empty dependency array ensures useEffect runs only once on component mount
+const handleLogin = async () => {
+  // console.log("Auth object:", auth);
+  if (!auth) {
+    console.error("Auth object is not initialized.");
+    return;
+  }
 
-    try {
-      const confirmationResult = await signInWithPhoneNumber(authInstance, `+91${mobileNumber}`);
-      setVerificationId(confirmationResult.verificationId);
-      // Prompt user to enter OTP
-    } catch (error) {
-      console.error("Error sending OTP:", error);
-      Alert.alert("Error", "Failed to send OTP. Please try again later.");
-    }
+  if (mobileNumber.length !== 10) {
+    Alert.alert("Error", "Please enter a valid 10-digit mobile number.");
+    return;
+  }
+
+  try {
+    const appVerifier = new firebase.auth.RecaptchaVerifier("recaptcha-container", {
+      size: "invisible",
+      siteKey: '6Le7yrYpAAAAAOs5PXdqO7QAN07Am6bHUnnWU_v0',
+    });
+
+    const confirmationResult = await signInWithPhoneNumber(auth,`+91${mobileNumber}`, appVerifier);
+    setVerificationId(confirmationResult.verificationId);
+    setShowOtpBox(true);
+  } catch (error) {
+    console.error("Error sending OTP:", error);
+    Alert.alert("Error", "Failed to send OTP. Please try again later.");
+  }
+};
+
+
+  const handleOtpVerification = () => {
+    if (!auth) return; // Ensure auth is initialized
+
+    const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, otp);
+    
+    auth.signInWithCredential(credential)
+      .then((result) => {
+        Alert.alert("Success", "OTP Verified Successfully");
+        // Handle successful login
+      })
+      .catch((error) => {
+        console.error("Error verifying OTP:", error);
+        Alert.alert("Error", "Invalid OTP. Please try again.");
+      });
   };
 
-  const handleOtpVerification = async () => {
-    try {
-      const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, otp);
-      const userCredential = await auth.signInWithCredential(credential);
-      console.log(userCredential)
-      // OTP verified successfully, handle login
-    } catch (error) {
-      console.error("Error verifying OTP:", error);
-      Alert.alert("Error", "Invalid OTP. Please try again.");
-    }
-  };
 
   return (
     <View style={styles.container}>
+      <Image source="" style={styles.image} />
+      <View style={styles.titleContainer}>
+        <Text style={styles.mobileNumberTitle}>Mobile Number:</Text>
+      </View>
       <TextInput
         style={styles.input}
-        placeholder="Enter Mobile Number"
         keyboardType="numeric"
         value={mobileNumber}
         onChangeText={setMobileNumber}
       />
+       <View id="recaptcha-container"></View>
       <Button title="Send OTP" onPress={handleLogin} />
-      {/* OTP input field and verify button */}
+      {showOtpBox && (
+        <View style={styles.otpContainer}>
+          <Text style={styles.otpText}>
+            Please enter the OTP sent to your mobile number
+          </Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter OTP"
+            keyboardType="numeric"
+            value={otp}
+            onChangeText={setOtp}
+          />
+          <TouchableOpacity
+            style={styles.verifyButton}
+            onPress={handleOtpVerification}
+          >
+            <Text style={styles.verifyButtonText}>Verify OTP</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  image: {
+    width: 250,
+    height: 250,
+  },
   container: {
     flex: 1,
+    backgroundColor: "transparent",
     justifyContent: "center",
     alignItems: "center",
+    position: "relative",
+  },
+  titleContainer: {
+    flexDirection: "",
+    justifyContent: "flex-start",
+    alignSelf: "flex-start",
+    marginLeft: "5%",
+  },
+  mobileNumberTitle: {
+    fontSize: 16,
+    textAlign: "left",
+    fontWeight: "bold",
+    marginLeft: "5%",
   },
   input: {
     width: "80%",
@@ -78,6 +148,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 20,
     paddingHorizontal: 10,
+  },
+  otpContainer: {
+    marginTop: 20,
+    alignItems: "center",
+  },
+  otpText: {
+    marginBottom: 10,
+  },
+  verifyButton: {
+    backgroundColor: "#007bff",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    marginTop: 10,
+  },
+  verifyButtonText: {
+    color: "white",
+    fontWeight: "bold",
   },
 });
 
