@@ -2,7 +2,7 @@ import React, { useState ,useEffect} from "react";
 import { View, Image, TextInput, Button, Text, StyleSheet, TouchableOpacity, Alert,} from "react-native";
 import { initializeApp } from "firebase/app"; // Import initializeApp from firebase/app
 import { getAnalytics } from "firebase/analytics";
-import { getAuth , signInWithPhoneNumber} from "firebase/auth";
+import { getAuth , signInWithPhoneNumber, PhoneAuthProvider, RecaptchaVerifier,  signInWithCredential,} from "firebase/auth";
 
 import firebase from "firebase/app"; // Import firebase from firebase/app
 
@@ -23,19 +23,20 @@ const LoginPage = () => {
   const [mobileNumber, setMobileNumber] = useState("");
   const [otp, setOtp] = useState("");
   const [showOtpBox, setShowOtpBox] = useState(false);
-  const [verificationId, setVerificationId] = useState(null);
+const [verificationId,setVerificationId]=useState("");
   const [auth, setAuth] = useState(null);
 
   useEffect(() => {
   const app = initializeApp(firebaseConfig);
   const analytics = getAnalytics(app);
-  const authInstance = getAuth();
+  const authInstance = getAuth(app);
   authInstance.languageCode = 'it';
   // console.log("Auth initialized:", authInstance);
   setAuth(authInstance);
+  // console.log(authInstance);
 }, []);// Empty dependency array ensures useEffect runs only once on component mount
 const handleLogin = async () => {
-  // console.log("Auth object:", auth);
+  console.log("Auth object:", auth);
   if (!auth) {
     console.error("Auth object is not initialized.");
     return;
@@ -47,13 +48,13 @@ const handleLogin = async () => {
   }
 
   try {
-    const appVerifier = new firebase.auth.RecaptchaVerifier("recaptcha-container", {
+    const appVerifier = new RecaptchaVerifier(auth,"recaptcha-container", {
       size: "invisible",
-      siteKey: '6Le7yrYpAAAAAOs5PXdqO7QAN07Am6bHUnnWU_v0',
     });
-
-    const confirmationResult = await signInWithPhoneNumber(auth,`+91${mobileNumber}`, appVerifier);
-    setVerificationId(confirmationResult.verificationId);
+   console.log(appVerifier);
+    const confirmationResult = await signInWithPhoneNumber(auth,`+91${mobileNumber}`,appVerifier);
+    setVerificationId(confirmationResult.verificationId)
+    // console.log("verificationid:",verificationId)
     setShowOtpBox(true);
   } catch (error) {
     console.error("Error sending OTP:", error);
@@ -62,15 +63,15 @@ const handleLogin = async () => {
 };
 
 
-  const handleOtpVerification = () => {
+  const handleOtpVerification = async () => {
     if (!auth) return; // Ensure auth is initialized
-
-    const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, otp);
+console.log(verificationId)
+    const credential = PhoneAuthProvider.credential(verificationId, otp);
     
-    auth.signInWithCredential(credential)
+    await signInWithCredential(auth,credential)
       .then((result) => {
         Alert.alert("Success", "OTP Verified Successfully");
-        // Handle successful login
+       console.log("successfull app")
       })
       .catch((error) => {
         console.error("Error verifying OTP:", error);
