@@ -1,16 +1,4 @@
-// import React, { useState ,useEffect} from "react";
-// import { View, Image, TextInput, Button, Text, StyleSheet, TouchableOpacity, Alert,} from "react-native";
-// import LoginPage from "./LoginPage";
 
-// const App = ()=>{
-//   return (<View >
-//    <LoginPage />
-   
-//   </View>)
-// }
-
-// import * as React from 'react';  
-// import { Button, View,StyleSheet, Text, Image, TextInput, TouchableOpacity,} from 'react-native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import 'react-native-gesture-handler';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -26,6 +14,7 @@ import { getAnalytics } from "firebase/analytics";
 import { getAuth , signInWithPhoneNumber, PhoneAuthProvider, RecaptchaVerifier,  signInWithCredential,} from "firebase/auth";
 
 import firebase from "firebase/app"; // Import firebase from firebase/app
+import axios from 'axios';
 
 
 const firebaseConfig = {
@@ -377,8 +366,10 @@ console.log(verificationId)
     const credential = PhoneAuthProvider.credential(verificationId, otp);
     
     await signInWithCredential(auth,credential)
-      .then((result) => {
+      .then(async (result) => {
         Alert.alert("Success", "OTP Verified Successfully");
+        const res = await axios.post(`http://localhost:8080/api/registrate?mobilePhone=${mobileNumber}`);
+       console.log(res)
        navigation.navigate("Mystack")
       })
       .catch((error) => {
@@ -710,3 +701,5 @@ position:"relative"
     fontWeight: "bold",
   },
   });
+
+  
