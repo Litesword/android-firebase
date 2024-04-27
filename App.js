@@ -1,4 +1,3 @@
-
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import 'react-native-gesture-handler';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -6,15 +5,11 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider,useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { launchImageLibrary } from "react-native-image-picker";
-// import { useState } from "react";
 import React, { useState ,useEffect} from "react";
 import { View, Image, TextInput, Button, Text, StyleSheet, TouchableOpacity, Alert,} from "react-native";
 import { initializeApp } from "firebase/app"; // Import initializeApp from firebase/app
 import { getAnalytics } from "firebase/analytics";
 import { getAuth , signInWithPhoneNumber, PhoneAuthProvider, RecaptchaVerifier,  signInWithCredential,} from "firebase/auth";
-
-import firebase from "firebase/app"; // Import firebase from firebase/app
-import axios from 'axios';
 
 
 const firebaseConfig = {
@@ -366,10 +361,8 @@ console.log(verificationId)
     const credential = PhoneAuthProvider.credential(verificationId, otp);
     
     await signInWithCredential(auth,credential)
-      .then(async (result) => {
+      .then((result) => {
         Alert.alert("Success", "OTP Verified Successfully");
-        const res = await axios.post(`http://localhost:8080/api/registrate?mobilePhone=${mobileNumber}`);
-       console.log(res)
        navigation.navigate("Mystack")
       })
       .catch((error) => {
@@ -377,9 +370,7 @@ console.log(verificationId)
         Alert.alert("Error", "Invalid OTP. Please try again.");
       });
   };
-
-
-  return (
+return (
     <View style={styles.container}>
       <Image source="" style={styles.image} />
       <View style={styles.titleContainer}>
@@ -440,6 +431,7 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container:{
+    marginTop:400,
      backgroundColor: '#fff',
     justifyContent: 'center',
   },
@@ -486,7 +478,7 @@ marginLeft:29
     },
     boxes1:{
       marginTop:50,
-      marginLeft:30,
+      marginLeft:10,
       flexDirection:"row-reverse",
       justifyContent:"space-between"
     },
@@ -512,7 +504,7 @@ marginLeft:29
      },
      boxes:{
       marginTop:20,
-      marginLeft:30,
+      marginLeft:10,
       flexDirection:"row-reverse",
       justifyContent:"space-between",
       
@@ -655,51 +647,4 @@ position:"relative"
     marginLeft:12,
   
   },
-  container: {
-    flex: 1,
-    backgroundColor: "transparent",
-    justifyContent: "center",
-    alignItems: "center",
-    position: "relative",
-  },
-  titleContainer: {
-    flexDirection: "",
-    justifyContent: "flex-start",
-    alignSelf: "flex-start",
-    marginLeft: "5%",
-  },
-  mobileNumberTitle: {
-    fontSize: 16,
-    textAlign: "left",
-    fontWeight: "bold",
-    marginLeft: "5%",
-  },
-  input: {
-    width: "80%",
-    height: 40,
-    borderColor: "gray",
-    borderWidth: 1,
-    marginBottom: 20,
-    paddingHorizontal: 10,
-  },
-  otpContainer: {
-    marginTop: 20,
-    alignItems: "center",
-  },
-  otpText: {
-    marginBottom: 10,
-  },
-  verifyButton: {
-    backgroundColor: "#007bff",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    marginTop: 10,
-  },
-  verifyButtonText: {
-    color: "white",
-    fontWeight: "bold",
-  },
   });
-
-  
